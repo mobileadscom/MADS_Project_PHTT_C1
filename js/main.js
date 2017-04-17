@@ -139,7 +139,7 @@ mads.prototype.linkOpener = function (url) {
     if (typeof mraid !== 'undefined') {
       mraid.open(url);
     }else{
-      window.open(url);
+      window.open(url, "_self");
     }
 
     if(typeof this.cte != 'undefined' && this.cte != '') {
@@ -268,7 +268,7 @@ var Ad = function () {
 */
 Ad.prototype.render = function () {
 
-  this.app.contentTag.innerHTML = '<div class="container" id="c"><div id="inner"><svg id="main"></svg><img src="'+this.app.path+'img/swipe-down.png"></div></div>';
+  this.app.contentTag.innerHTML = '<div class="container" id="c"><div id="inner"><svg id="main"></svg><img style="margin-top:-5px;" src="'+this.app.path+'img/swipe-down.png"></div></div>';
 
   document.body.style.margin = 0;
   document.body.style.padding = 0;
@@ -302,7 +302,7 @@ Ad.prototype.render = function () {
   els.copy3 = paper.image(this.app.path + 'img/copy03.png', 320 / 2 - 206 / 2, 60);
   els.copy3.node.style.opacity = '0';
 
-  els.cta = paper.image(this.app.path + 'img/cta-swipe.png', 320 / 2 - 177 / 2, 260);
+  els.cta = paper.image(this.app.path + 'img/cta-swipe.png', 320 / 2 - 190 / 2, 260);
   els.cta.node.style.opacity = '0';
 
   els.cuptop = paper.image(this.app.path + 'img/cup-toplayer.png', 113, 343);
@@ -330,24 +330,43 @@ Ad.prototype.applyEvents = function(els) {
 
   function openLP() {
     if (self.oncelp === 0) {
-        self.app.linkOpener('google.com')
         self.oncelp += 1;
+        self.app.linkOpener('https://www.pizzahut.co.id/menu/tea-time')
     }
   }
 
+  var originBetka;
+
   function deviceOrientationListener(event) {
     var betka = Math.round(event.beta);
-    if (betka > 60 && self.onces === 0) {
+    if(!originBetka) originBetka = betka;
+    var diff = 0;
+    if (betka > originBetka)
+      diff = betka - originBetka;
+    if (diff > 40 && self.onces === 0) {
         startAnimation();
         self.onces += 1;
     };
   }
+
   if (window.DeviceOrientationEvent) {
     window.addEventListener("deviceorientation", deviceOrientationListener);
   }
 
+  function upAndDownAnimateTeaBag() {
+    els.teabag.stop().animate(
+      {y: -180},
+      500,
+      function() {
+        els.teabag.animate({y: -170}, 500, upAndDownAnimateTeaBag)
+      }
+    )
+  }
+
+  upAndDownAnimateTeaBag();
+
   function startAnimation() {
-    els.teabag.animate({y: -45}, 500);
+    els.teabag.stop().animate({y: -45}, 500);
 
     els.tilt.node.style.transition = 'opacity 0.6s';
     els.tilt.node.style.opacity = '1';
@@ -370,10 +389,21 @@ Ad.prototype.applyEvents = function(els) {
       els.copy3.node.style.transition = 'opacity 0.5s';
       els.copy3.node.style.opacity = '1';
 
+      function upAndDownAnimateCTA() {
+        els.cta.stop().animate(
+          {y: 255},
+          300,
+          function() {
+            els.cta.animate({y: 265}, 300, upAndDownAnimateCTA)
+          }
+        )
+      }
+
+      upAndDownAnimateCTA();
+
       setTimeout(function() {
         els.cta.node.style.transition = 'opacity 0.5s';
         els.cta.node.style.opacity = '1';
-
 
         var draggie = new Draggabilly(inner, {
           axis: 'y'
@@ -384,18 +414,21 @@ Ad.prototype.applyEvents = function(els) {
             draggie.position.y = 0;
           }
 
-          if (draggie.position.y < -1000) {
+          if (draggie.position.y < -950) {
             openLP();
           }
 
-          if (draggie.position.y < -823) {
-            draggie.position.y = -823;
+          if (draggie.position.y < -869) {
+            draggie.position.y = -869;
           }
         });
+
+        draggie.on('pointerDown', function() {
+          setTimeout(function() {
+            self.oncelp = 0;
+          }, 1000)
+        })
       }, 300)
-
-
-
     }, 1500);
 
     setTimeout(function() {
